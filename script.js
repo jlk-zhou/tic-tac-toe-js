@@ -4,25 +4,6 @@ const gameBoard = (function () {
     const columns = 3; 
     const board = []; 
 
-    // The Cell object of the board
-    function Cell() {
-        let value = ""; 
-        const mark = (player) => {
-            value = player.marker; 
-        }; 
-        const getValue = () => value; 
-        return { mark, getValue }; 
-    }
-
-    // Check whether the board is full
-    const isFull = () => {
-        const emptyCellsCount = board
-            .flat()
-            .filter(cell => cell.getValue() === "")
-            .length;
-        return emptyCellsCount === 0 ? true : false;  
-    }
-
     // Initializes or resets the game board
     const init = () => {
         for (let i = 0; i < rows; i++) {
@@ -32,6 +13,15 @@ const gameBoard = (function () {
             }
         }
     }; 
+
+    // Check whether the board is full
+    const isFull = () => {
+        const emptyCellsCount = board
+            .flat()
+            .filter(cell => cell.getValue() === "")
+            .length;
+        return emptyCellsCount === 0 ? true : false;  
+    }
 
     // Get current state of the board
     const getBoard = () => board; 
@@ -71,10 +61,22 @@ const gameBoard = (function () {
 
 })(); 
 
-const createPlayer = (name, marker) => { 
+// The Cell object of the board
+function Cell() {
+    let value = ""; 
+    const mark = (player) => {
+        value = player.marker; 
+    }; 
+    const getValue = () => value; 
+    return { mark, getValue }; 
+}
+
+// The player factory function
+function createPlayer(name, marker) { 
     return { name, marker }; 
 }; 
 
+// The game controller module
 const controller = (function () {
     const p1 = createPlayer("Tom", "X"); 
     const p2 = createPlayer("Jerry", "O"); 
@@ -170,6 +172,68 @@ const controller = (function () {
 
     return {
         playRound, 
+        getActivePlayer, 
+        getBoard: board.getBoard, 
+        checkWinDraw, 
     }
+})(); 
+
+// The screen controller module, for rendering UI
+const screenController = (function () {
+    const game = controller; 
+    const messageDiv = document.querySelector(".message"); 
+    const boardDiv = document.querySelector(".board"); 
+
+    const updateScreen = () => {
+
+        // Clear board
+        boardDiv.textContent = ""; 
+
+        // Get current board state
+        const board = game.getBoard(); 
+        const activePlayer = game.getActivePlayer(); 
+
+        messageDiv.textContent = `${activePlayer.name} (${activePlayer.marker}) 's turn. `; 
+        messageDiv.dataset.state = "playing"; 
+
+        // Render board
+        board.forEach((row, rowIndex)=> {
+            row.forEach((cell, columnIndex) => {
+                const cellButton = document.createElement("button"); 
+                cellButton.dataset.row = rowIndex; 
+                cellButton.dataset.column = columnIndex; 
+                cellButton.classList.add("cell"); 
+                cellButton.textContent = cell.getValue(); 
+                boardDiv.appendChild(cellButton); 
+            })
+        })
+    }
+
+    const clickHandler = (e) => {
+        // Make sure a cell is clicked and the game is still in progress
+        if (e.target.classList.contains("cell") !== true
+            || messageDiv.dataset.state !== "playing") return; 
+
+        // Place a mark in the UI and update the screen 
+        const row = e.target.dataset.row; 
+        const column = e.target.dataset.column; 
+        game.playRound(row, column); 
+        updateScreen(); 
+
+        // End the game if win or draw
+        if (game.checkWinDraw(game.getBoard()) === 0) {
+            messageDiv.dataset.state = "ended"; 
+            messageDiv.textContent = `${game.getActivePlayer().name} (${game.getActivePlayer().marker}) wins! `;
+        } else if (game.checkWinDraw(game.getBoard()) === 1) {
+            messageDiv.dataset.state = "ended"; 
+            messageDiv.textContent = "It's a draw! ";
+        }
+    }
+
+    boardDiv.addEventListener("click", clickHandler); 
+
+    updateScreen(); 
+
+    return { updateScreen }; 
 })(); 
 

@@ -1,0 +1,25 @@
+body {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    height: 100vh; 
+    font-family: Arial, Helvetica, sans-serif
+}
+
+.board {
+    width: 600px; 
+    height: 600px; 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    grid-template-rows: repeat(3, 1fr); 
+}
+
+.message {
+    font-size: 2em; 
+    margin-top: 30px; 
+}
+
+.cell {
+    font-size: 7em; 
+}
