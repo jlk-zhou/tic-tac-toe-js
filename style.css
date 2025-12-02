@@ -7,6 +7,17 @@ body {
     font-family: Arial, Helvetica, sans-serif
 }
 
+.controls {
+    display: grid; 
+    grid-template-columns: 300px 1fr; 
+    grid-template-rows: repeat(2, 1fr); 
+}
+
+.start-reset {
+    grid-column: 2; 
+    grid-row: 1 / -1; 
+}
+
 .board {
     width: 600px; 
     height: 600px; 

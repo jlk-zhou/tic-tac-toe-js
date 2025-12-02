@@ -173,6 +173,7 @@ const controller = (function () {
     return {
         playRound, 
         getActivePlayer, 
+        init: board.init, 
         getBoard: board.getBoard, 
         checkWinDraw, 
     }
@@ -183,9 +184,23 @@ const screenController = (function () {
     const game = controller; 
     const messageDiv = document.querySelector(".message"); 
     const boardDiv = document.querySelector(".board"); 
+    const startResetButton = document.querySelector(".start-reset"); 
+
+    const renderStartGame = () => {
+        game.init(); 
+        updateScreen(); 
+        messageDiv.textContent = "Please enter player names and click start. "
+        messageDiv.dataset.state = "before-start"; 
+        startResetButton.textContent = "Start"; 
+    }
+
+    const startGame = (p1name, p2name) => {
+        messageDiv.dataset.state = "playing"; 
+        updateScreen(); 
+        startResetButton.textContent = "Reset"; 
+    }
 
     const updateScreen = () => {
-
         // Clear board
         boardDiv.textContent = ""; 
 
@@ -194,7 +209,6 @@ const screenController = (function () {
         const activePlayer = game.getActivePlayer(); 
 
         messageDiv.textContent = `${activePlayer.name} (${activePlayer.marker}) 's turn. `; 
-        messageDiv.dataset.state = "playing"; 
 
         // Render board
         board.forEach((row, rowIndex)=> {
@@ -209,30 +223,45 @@ const screenController = (function () {
         })
     }
 
+    const renderEndGame = (endState) => {
+        if (endState !== undefined) {
+            messageDiv.dataset.state = "ended"; 
+            if (endState === 0) {
+                messageDiv.textContent = `${game.getActivePlayer().name} (${game.getActivePlayer().marker}) wins! `;
+            } else if (endState === 1) {
+                messageDiv.textContent = "It's a draw! ";
+            }
+        }
+    }
+
     const clickHandler = (e) => {
         // Make sure a cell is clicked and the game is still in progress
         if (e.target.classList.contains("cell") !== true
             || messageDiv.dataset.state !== "playing") return; 
 
-        // Place a mark in the UI and update the screen 
+        // Place a mark in the UI and update the screen. 
         const row = e.target.dataset.row; 
         const column = e.target.dataset.column; 
         game.playRound(row, column); 
         updateScreen(); 
 
         // End the game if win or draw
-        if (game.checkWinDraw(game.getBoard()) === 0) {
-            messageDiv.dataset.state = "ended"; 
-            messageDiv.textContent = `${game.getActivePlayer().name} (${game.getActivePlayer().marker}) wins! `;
-        } else if (game.checkWinDraw(game.getBoard()) === 1) {
-            messageDiv.dataset.state = "ended"; 
-            messageDiv.textContent = "It's a draw! ";
+        const endState = game.checkWinDraw(game.getBoard()); 
+        if (endState !== undefined) renderEndGame(endState); 
+    }
+
+    const startResetHandler = () => {
+        if (messageDiv.dataset.state === "before-start") {
+            startGame(); 
+        } else if (messageDiv.dataset.state === "playing"
+                || messageDiv.dataset.state === "ended") {   
+            renderStartGame(); 
         }
     }
 
     boardDiv.addEventListener("click", clickHandler); 
-
-    updateScreen(); 
+    startResetButton.addEventListener("click", startResetHandler); 
+    renderStartGame(); 
 
     return { updateScreen }; 
 })(); 
