@@ -15,7 +15,7 @@ const gameBoard = (function () {
     }
 
     // Check whether the board is full
-    function _isFull(board) {
+    const isFull = () => {
         const emptyCellsCount = board
             .flat()
             .filter(cell => cell.getValue() === "")
@@ -38,7 +38,7 @@ const gameBoard = (function () {
 
     // Mark a cell with a player's marker
     const markCell = (row, column, player) => {
-        if (_isFull(board)) {
+        if (isFull()) {
             console.log("Board is full! "); 
             return 2; 
         }; 
@@ -63,6 +63,7 @@ const gameBoard = (function () {
 
     return { 
         init, 
+        isFull, 
         getBoard, 
         markCell, 
         printBoard, 
@@ -122,7 +123,9 @@ const controller = (function () {
         if (isSame && (diagonal1[1] !== "" || diagonal2[1] !== "")) {
             return 0; 
         }
+
         // Check draw
+        if (gameBoard.isFull()) return 1; 
     }
 
     // Printing new round
@@ -147,6 +150,9 @@ const controller = (function () {
             if (winDraw === 0) {
                 board.printBoard(); 
                 console.log(`${getActivePlayer().name} (${getActivePlayer().marker}) wins! `)
+            } else if (winDraw === 1) {
+                board.printBoard(); 
+                console.log("It's a draw! ")
             } else {
                 // Switch player
                 switchPlayer(); 
@@ -163,10 +169,7 @@ const controller = (function () {
     printNewRound(); 
 
     return {
-        getBoard : board.getBoard, 
-        printBoard: board.printBoard, 
         playRound, 
-        checkWinDraw, 
     }
 })(); 
 
