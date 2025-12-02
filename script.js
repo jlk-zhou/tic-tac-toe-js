@@ -40,14 +40,16 @@ const gameBoard = (function () {
     const markCell = (row, column, player) => {
         if (_isFull(board)) {
             console.log("Board is full! "); 
-            return; 
+            return 2; 
         }; 
         
         const cell = board[row][column]; 
         if (cell.getValue() === "") {
             cell.mark(player); 
+            return 0; 
         } else {
             console.log("Cell already marked! "); 
+            return 1; 
         }
     }
 
@@ -76,25 +78,95 @@ const controller = (function () {
     const p1 = createPlayer("Tom", "X"); 
     const p2 = createPlayer("Jerry", "O"); 
     const board = gameBoard
-    
+
+    // Initialize the game board
     board.init(); 
-    board.printBoard(); 
 
-    // Active player setter
+    const players = [p1, p2]; 
+    
+    let activePlayer = players[0];
 
-    // Active player switcher
+    const switchPlayer = () => {
+        activePlayer = (
+            activePlayer === players[0] ? players[1] : players[0]
+        ); 
+    }
+
+    const getActivePlayer = () => activePlayer; 
 
     // Win-draw checker
+    const checkWinDraw = (board) => {
+        // Check rows
+        for (row of board) {
+            isSame = new Set(row.map(cell => cell.getValue())).size === 1;  
+            if (isSame && row[0].getValue() !== "") {
+                return 0; 
+            }
+        }
+
+        // Check columns
+        for (i = 0; i < board.length; i++) {
+            const column = board
+                           .map(row => row[i])
+                           .map(cell => cell.getValue()); 
+            isSame = new Set(column).size === 1; 
+            if (isSame && column[0] !== "") {
+                return 0; 
+            }
+        }
+
+        // Check diagonals
+        const diagonal1 = [board[0][0], board[1][1], board[2][2]].map(cell => cell.getValue()); 
+        const diagonal2 = [board[0][2], board[1][1], board[2][0]].map(cell => cell.getValue()); 
+        isSame = new Set(diagonal1).size === 1 || new Set(diagonal2).size === 1; 
+        if (isSame && (diagonal1[1] !== "" || diagonal2[1] !== "")) {
+            return 0; 
+        }
+        // Check draw
+    }
 
     // Printing new round
+    const printNewRound = () => {
+        board.printBoard(); 
+        console.log(`${getActivePlayer().name} (${getActivePlayer().marker}) 's turn! `)
+    }
 
     // method: Play one round(row, column), to be exported
+    const playRound = (row, column) => {
         // Get current player
+        console.log(
+            `Marking cell at row ${row}, column ${column} with ${getActivePlayer().marker}... `
+        )
         // Mark cell with current player's marker
-        // Check win or draw
+        const marked = board.markCell(row, column, getActivePlayer()); 
+        
+        if (marked === 0) {
+            // TODO: Check win or draw
+            const winDraw = checkWinDraw(board.getBoard()); 
             // If win-draw, print result and return 
-        // Switch player
-        // Print new round: the board and who's turn it is
-    
+            if (winDraw === 0) {
+                board.printBoard(); 
+                console.log(`${getActivePlayer().name} (${getActivePlayer().marker}) wins! `)
+            } else {
+                // Switch player
+                switchPlayer(); 
+                // Print new round: the board and who's turn it is
+                printNewRound(); 
+            }
+        } else if (marked === 1) {
+            console.log("Please try again. ")
+        }
+    }
+
+    // Initialize the first round
+    console.log("Starting a new game... ")
+    printNewRound(); 
+
+    return {
+        getBoard : board.getBoard, 
+        printBoard: board.printBoard, 
+        playRound, 
+        checkWinDraw, 
+    }
 })(); 
 
