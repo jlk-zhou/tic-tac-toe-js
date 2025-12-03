@@ -8,11 +8,13 @@
     <script defer src="./script.js"></script>
 </head>
 <body>
-    <div class="controls">
-        <div class="player x" data-name="">X</div>
-        <div class="player o" data-name="">O</div>
-        <button class="start-reset">Start</button>
-    </div>
+    <form class="controls">
+        <label class="player x" for="x-name" data-name="">X: </label>
+        <input type="text" id="x-name" name="x-name">
+        <label class="player o" for="o-name" data-name="">O: </label>
+        <input type="text" id="o-name" name="o-name">
+        <button type="submit" class="start-reset">Start</button>
+    </form>
     <div class="board"></div>
     <div class="message"></div>
 </body>

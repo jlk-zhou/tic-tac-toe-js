@@ -76,18 +76,26 @@ function createPlayer(name, marker) {
     return { name, marker }; 
 }; 
 
-// The game controller module
-const controller = (function () {
-    const p1 = createPlayer("Tom", "X"); 
-    const p2 = createPlayer("Jerry", "O"); 
-    const board = gameBoard
+// Create players factory
+function Players() {
+    const players = []; 
+    let activePlayer;
 
-    // Initialize the game board
-    board.init(); 
+    const resetPlayers = () => {
+        players.splice(0, players.length); 
+    }
 
-    const players = [p1, p2]; 
-    
-    let activePlayer = players[0];
+    const setPlayers = (xName, oName) => {
+        resetPlayers(); 
+        const p1 = createPlayer(xName, "X"); 
+        const p2 = createPlayer(oName, "O"); 
+        players.push(p1, p2); 
+        activePlayer = players[0]; 
+    }
+
+    const getPlayers = () => players; 
+
+    const getActivePlayer = () => activePlayer; 
 
     const switchPlayer = () => {
         activePlayer = (
@@ -95,7 +103,22 @@ const controller = (function () {
         ); 
     }
 
-    const getActivePlayer = () => activePlayer; 
+    return {
+        getPlayers, 
+        setPlayers, 
+        getActivePlayer, 
+        switchPlayer, 
+    }
+}
+
+// The game controller module
+const controller = (function () {
+
+    // Initialize the game board
+    const board = gameBoard
+    board.init(); 
+
+    let players = Players(); 
 
     // Win-draw checker
     const checkWinDraw = (board) => {
@@ -133,17 +156,17 @@ const controller = (function () {
     // Printing new round
     const printNewRound = () => {
         board.printBoard(); 
-        console.log(`${getActivePlayer().name} (${getActivePlayer().marker}) 's turn! `)
+        console.log(`${players.getActivePlayer().name} (${players.getActivePlayer().marker}) 's turn! `)
     }
 
     // method: Play one round(row, column), to be exported
     const playRound = (row, column) => {
         // Get current player
         console.log(
-            `Marking cell at row ${row}, column ${column} with ${getActivePlayer().marker}... `
+            `Marking cell at row ${row}, column ${column} with ${players.getActivePlayer().marker}... `
         )
         // Mark cell with current player's marker
-        const marked = board.markCell(row, column, getActivePlayer()); 
+        const marked = board.markCell(row, column, players.getActivePlayer()); 
         
         if (marked === 0) {
             // TODO: Check win or draw
@@ -151,13 +174,13 @@ const controller = (function () {
             // If win-draw, print result and return 
             if (winDraw === 0) {
                 board.printBoard(); 
-                console.log(`${getActivePlayer().name} (${getActivePlayer().marker}) wins! `)
+                console.log(`${players.getActivePlayer().name} (${players.getActivePlayer().marker}) wins! `)
             } else if (winDraw === 1) {
                 board.printBoard(); 
                 console.log("It's a draw! ")
             } else {
                 // Switch player
-                switchPlayer(); 
+                players.switchPlayer(); 
                 // Print new round: the board and who's turn it is
                 printNewRound(); 
             }
@@ -168,11 +191,13 @@ const controller = (function () {
 
     // Initialize the first round
     console.log("Starting a new game... ")
-    printNewRound(); 
+    board.printBoard(); 
 
     return {
         playRound, 
-        getActivePlayer, 
+        setPlayers: players.setPlayers, 
+        getPlayers: players.getPlayers, 
+        getActivePlayer: players.getActivePlayer, 
         init: board.init, 
         getBoard: board.getBoard, 
         checkWinDraw, 
@@ -182,19 +207,24 @@ const controller = (function () {
 // The screen controller module, for rendering UI
 const screenController = (function () {
     const game = controller; 
-    const messageDiv = document.querySelector(".message"); 
-    const boardDiv = document.querySelector(".board"); 
+    const xPlayerInput = document.querySelector("#x-name"); 
+    const oPlayerInput = document.querySelector("#o-name");
     const startResetButton = document.querySelector(".start-reset"); 
+    const boardDiv = document.querySelector(".board"); 
+    const messageDiv = document.querySelector(".message"); 
 
     const renderStartGame = () => {
         game.init(); 
         updateScreen(); 
         messageDiv.textContent = "Please enter player names and click start. "
         messageDiv.dataset.state = "before-start"; 
+        xPlayerInput.value = ""; 
+        oPlayerInput.value = ""; 
         startResetButton.textContent = "Start"; 
     }
 
     const startGame = (p1name, p2name) => {
+        game.setPlayers(p1name, p2name); 
         messageDiv.dataset.state = "playing"; 
         updateScreen(); 
         startResetButton.textContent = "Reset"; 
@@ -208,7 +238,9 @@ const screenController = (function () {
         const board = game.getBoard(); 
         const activePlayer = game.getActivePlayer(); 
 
-        messageDiv.textContent = `${activePlayer.name} (${activePlayer.marker}) 's turn. `; 
+        if (messageDiv.dataset.state === "playing") {
+            messageDiv.textContent = `${activePlayer.name} (${activePlayer.marker}) 's turn. `; 
+        }
 
         // Render board
         board.forEach((row, rowIndex)=> {
@@ -250,9 +282,12 @@ const screenController = (function () {
         if (endState !== undefined) renderEndGame(endState); 
     }
 
-    const startResetHandler = () => {
+    const startResetHandler = (e) => {
+        e.preventDefault(); 
         if (messageDiv.dataset.state === "before-start") {
-            startGame(); 
+            xName = xPlayerInput.value; 
+            oName = oPlayerInput.value; 
+            startGame(xName, oName); 
         } else if (messageDiv.dataset.state === "playing"
                 || messageDiv.dataset.state === "ended") {   
             renderStartGame(); 
@@ -265,4 +300,3 @@ const screenController = (function () {
 
     return { updateScreen }; 
 })(); 
-

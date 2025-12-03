@@ -3,19 +3,30 @@ body {
     flex-direction: column; 
     align-items: center; 
     justify-content: center; 
+    gap: 30px; 
     height: 100vh; 
     font-family: Arial, Helvetica, sans-serif
 }
 
 .controls {
     display: grid; 
-    grid-template-columns: 300px 1fr; 
+    grid-template-columns: min-content 1fr min-content; 
     grid-template-rows: repeat(2, 1fr); 
+    align-items: space-between;
+    width: 600px; 
+    column-gap: 20px; 
+    row-gap: 5px; 
+}
+
+.controls > label {
+    font-size: 1.5em;
 }
 
 .start-reset {
-    grid-column: 2; 
+    grid-column: 3; 
     grid-row: 1 / -1; 
+    width: 100px; 
+    font-size: 1.5em; 
 }
 
 .board {
@@ -27,8 +38,7 @@ body {
 }
 
 .message {
-    font-size: 2em; 
-    margin-top: 30px; 
+    font-size: 1.7em; 
 }
 
 .cell {
